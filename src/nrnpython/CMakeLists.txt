@@ -169,10 +169,17 @@ if(NRN_ENABLE_MODULE_INSTALL)
     list(GET NRN_PYTHON_MAKE_ABI3_LIST ${val} _make_abi3)
     if (_call_setup)
       set(_abi3_cmd true)
+      set(_abi3_rxdcp true)
       if (_make_abi3)
         # NRN_ENABLE_ABI3=ON and first python3 in NRN_PYTHON_EXE_LIST
         set(_mdir ${PROJECT_BINARY_DIR}/lib/python/neuron)
         set(_abi3_cmd cp ${_mdir}/hoc.cpython-3*.so ${_mdir}/hoc.abi3.so)
+        if (NRN_ENABLE_RX3D)
+          # The rxd extensions are not abi3 compatible and need to be copied 
+          set(_bdir ${_mdir}/rxd/geometry3d)
+          set(_sdir ${PROJECT_BINARY_DIR}/share/lib/python/neuron/rxd/geometry3d)
+          set(_abi3_rxdcp cp ${_sdir}/*.cpython-3*.so ${_bdir})
+        endif()
       endif()
       add_custom_command(TARGET hoc_module POST_BUILD
                          COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -180,6 +187,7 @@ if(NRN_ENABLE_MODULE_INSTALL)
                                  ${CMAKE_CURRENT_BINARY_DIR}/inithoc.cpp
                          COMMAND ${pyexe} setup.py install ${NRN_MODULE_INSTALL_OPTIONS}
                          COMMAND ${_abi3_cmd}
+                         COMMAND ${_abi3_rxdcp}
                          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                          COMMENT "Building python module with: ${pyexe}")
     endif()
